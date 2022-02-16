@@ -38,7 +38,7 @@ var (
 const (
 	maxMessageLength = 250
 	coolDown         = time.Minute * 2
-	coolDownMessages = 5 // 5 messages -> 5 messages per 2 minutes max
+	coolDownMessages = 15 // 15 messages -> 15 messages per 2 minutes max
 )
 
 type Chat struct {
