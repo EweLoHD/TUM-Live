@@ -42,7 +42,7 @@ func configGinChatRouter(router *gin.RouterGroup) {
 			return
 		}
 		tumLiveContext := foundContext.(tools.TUMLiveContext)
-		if tumLiveContext.User == nil {
+		if tumLiveContext.User == nil && tumLiveContext.Course.RequireChatLogin {
 			return
 		}
 		var req wsReq
@@ -127,9 +127,11 @@ func handleMessage(ctx tools.TUMLiveContext, session *melody.Session, msg []byte
 	if !ctx.Course.ChatEnabled {
 		return
 	}
-	uname := ctx.User.Name
+	uname := "Guest"
 	if chat.Anonymous && ctx.Course.AnonymousChatEnabled {
 		uname = "Anonymous"
+	} else if ctx.User != nil {
+		uname = ctx.User.Name
 	}
 	replyTo := sql.NullInt64{}
 	if chat.ReplyTo == 0 {
@@ -140,12 +142,14 @@ func handleMessage(ctx tools.TUMLiveContext, session *melody.Session, msg []byte
 		replyTo.Valid = true
 	}
 	chatForDb := model.Chat{
-		UserID:   strconv.Itoa(int(ctx.User.ID)),
 		UserName: uname,
 		Message:  chat.Msg,
 		StreamID: ctx.Stream.ID,
-		Admin:    ctx.User.ID == ctx.Course.UserID,
 		ReplyTo:  replyTo,
+	}
+	if ctx.User != nil {
+		chatForDb.UserID = strconv.Itoa(int(ctx.User.ID))
+		chatForDb.Admin = ctx.User.ID == ctx.Course.UserID
 	}
 	chatForDb.SanitiseMessage()
 	err := dao.AddMessage(&chatForDb)

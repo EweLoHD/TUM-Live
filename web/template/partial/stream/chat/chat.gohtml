@@ -1,7 +1,9 @@
 {{define "chat"}}
     {{- /*gotype: TUM-Live/web.WatchPageData*/ -}}
     {{$stream := .IndexData.TUMLiveContext.Stream}}
-    <div x-cloak x-data="{orderByLikes: false, show: $persist(false).as('chatOpen'), replyTo: 0, message: '', admin: {{.IsAdminOfCourse}}, anonymous: false, messages: []}"
+    <div x-cloak x-data="{orderByLikes: false, show: $persist(false).as('chatOpen'),
+        replyTo: 0, message: '', admin: {{.IsAdminOfCourse}}, anonymous: false, messages: [],
+        loggedIn: {{if .IndexData.TUMLiveContext.User}} true {{else}} false {{end}}, loginRequired: {{.IndexData.TUMLiveContext.Course.RequireChatLogin}} }"
          x-init="fetch('/api/chat/{{$stream.ID}}/messages').then(res => res.json()).then(d => {messages=d});$nextTick(() => { watch.scrollToBottom() })"
          x-on:chatmessage.window="e => {messages.push(e.detail)}"
          x-on:chatreply.window="e => {messages.find(m=>m.ID===e.detail.replyTo.Int64).replies.push(e.detail);}"
@@ -58,9 +60,9 @@
                        x-ref="chatInput"
                        x-model="message"
                        class="py-2 px-4 border-0 text-sm font-normal placeholder:text-sm"
-                       {{if not (.IndexData.TUMLiveContext.User)}}disabled
-                       placeholder="Log in to chat" {{else}}
-                       :placeholder="replyTo===0?'Send a message':'Reply [escape to cancel]'" {{end}}autocomplete="off"
+                       :disabled="(loginRequired && !loggedIn)"
+                       :placeholder="(loginRequired && !loggedIn)?'Log in to chat':(replyTo===0?'Send a message':'Reply [escape to cancel]')"
+                       autocomplete="off"
                        id="chatInput" type="text"
                        x-on:setmessage.window="e=>message=e.detail"
                        x-on:keydown="e=>{
@@ -70,18 +72,17 @@
                        else if(e.keyCode===13){$dispatch('chatenter');e.preventDefault();}
                        else {$nextTick(() =>{watch.getEmojisForMessage(message, e.target.selectionStart).then(r => $dispatch('emojisuggestions', r));})}}">
             </div>
-            {{if (.IndexData.TUMLiveContext.User)}}
-                <div class="flex justify-end 2xl:flex-none 2xl:my-auto mt-2">
-                    <button tabindex="-1"
-                            class="bg-sky-600 hover:bg-sky-700 dark:bg-sky-700 dark:hover:bg-sky-800
+            <div x-show="!loginRequired || loggedIn" class="flex justify-end 2xl:flex-none 2xl:my-auto mt-2">
+                <button tabindex="-1"
+                        @click="$dispatch('chatenter')"
+                        class="bg-sky-600 hover:bg-sky-700 dark:bg-sky-700 dark:hover:bg-sky-800
                                    disabled:bg-sky-300 disabled:hover:bg-sky-300 dark:disabled:bg-sky-300 dark:disabled:hover:bg-sky-300
                                    rounded border-0 focus:outline-none px-4 text-white text-sm py-2
                                    w-full 2xl:w-auto" :disabled="message===''">
-                        <span class="font-semibold">Send</span>
-                        <span class="fas fa-paper-plane ml-2"></span>
-                    </button>
-                </div>
-            {{end}}
+                    <span class="font-semibold">Send</span>
+                    <span class="fas fa-paper-plane ml-2"></span>
+                </button>
+            </div>
         </form>
     </div>
 {{end}}
