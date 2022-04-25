@@ -22,7 +22,6 @@
         class="video-js w-full"
         controls
         preload="auto"
-        data-setup='{"fluid": true}'
         {{if or .IndexData.TUMLiveContext.Stream.LiveNow .IndexData.TUMLiveContext.Stream.Recording}}poster="/public/default_banner.jpg">
         {{else}}poster="/public/no_active_stream.jpg">{{end}}
 <source src="{{if eq .Version "PRES"}}{{$stream.PlaylistUrlPRES}}{{else if eq .Version "CAM"}}{{$stream.PlaylistUrlCAM}}{{else}}{{$stream.PlaylistUrl}}{{end}}{{if .Unit}}?wowzaplaystart={{.Unit.UnitStart}}&wowzaplayduration={{.Unit.GetUnitDurationMS}}{{else if $stream.StartOffset}}?wowzaplaystart={{$stream.StartOffset}}&wowzaplayduration={{$stream.EndOffset}}{{end}}"
@@ -33,7 +32,8 @@
 </video>
 </body>
 <script>
-    watch.initPlayer();
+    watch.initPlayer(true);
+    watch.startWebsocket()
     {{if $stream.Silences}}
     watch.skipSilence({{$stream.GetSilencesJson}});
     {{end}}

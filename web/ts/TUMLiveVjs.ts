@@ -12,10 +12,10 @@ let player;
 /**
  * Initialize the player and bind it to a DOM object my-video
  */
-export const initPlayer = function () {
+export const initPlayer = function (fluid: boolean) {
     player = videojs("my-video", {
         liveui: true,
-        fluid: false,
+        fluid: fluid,
         playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
         html5: {
             reloadSourceOnError: true,
